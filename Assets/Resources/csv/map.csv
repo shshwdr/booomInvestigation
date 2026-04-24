@@ -1,0 +1,3 @@
+﻿identifier,name,pos,parent
+bar,酒吧,0.3|0.3,
+kitchen,厨房,0.8|0.2,bar
