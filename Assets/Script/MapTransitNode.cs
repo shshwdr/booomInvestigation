@@ -6,16 +6,19 @@ using UnityEngine.UI;
 public class MapTransitNode : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
 {
     [SerializeField] private Image iconImage;
+    [SerializeField] private Text nameText;
 
     private string mapName;
     private Action onClick;
-    private Action<string> onHoverChanged;
 
-    public void Setup(MapInfo info, Action onClickAction, Action<string> onHoverChangedAction)
+    public void Setup(MapInfo info, Action onClickAction)
     {
         mapName = info.name;
         onClick = onClickAction;
-        onHoverChanged = onHoverChangedAction;
+        if (nameText != null)
+        {
+            nameText.text = string.Empty;
+        }
     }
 
     public void SetSprite(Sprite sprite)
@@ -28,12 +31,18 @@ public class MapTransitNode : MonoBehaviour, IPointerEnterHandler, IPointerExitH
 
     public void OnPointerEnter(PointerEventData eventData)
     {
-        onHoverChanged?.Invoke(mapName);
+        if (nameText != null)
+        {
+            nameText.text = mapName;
+        }
     }
 
     public void OnPointerExit(PointerEventData eventData)
     {
-        onHoverChanged?.Invoke(string.Empty);
+        if (nameText != null)
+        {
+            nameText.text = string.Empty;
+        }
     }
 
     public void OnPointerClick(PointerEventData eventData)

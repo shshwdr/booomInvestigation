@@ -115,7 +115,7 @@ public class MapController : MonoBehaviour
         foreach (var child in children)
         {
             var node = Instantiate(mapTransitNodePrefab, mapNodeRoot);
-            node.Setup(child, () => ShowMap(child.identifier), ShowHoverName);
+            node.Setup(child, () => ShowMap(child.identifier));
             SetPositionByPercent(node.GetComponent<RectTransform>(), child.pos, mapNodeRoot);
         }
     }
@@ -131,7 +131,7 @@ public class MapController : MonoBehaviour
         foreach (var npc in npcs)
         {
             var node = Instantiate(npcPrefab, npcRoot);
-            node.Setup(npc, ShowHoverName);
+            node.Setup(npc);
             SetPositionByPercent(node.GetComponent<RectTransform>(), npc.pos, npcRoot);
         }
     }

@@ -8,6 +8,7 @@ public class GameManager : MonoBehaviour
     void Awake()
     {
         CSVLoader.Instance.Init();
+        TokenManager.Instance.Init();
     }
 
     // Update is called once per frame

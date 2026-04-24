@@ -33,7 +33,7 @@ public class BigMapController : MonoBehaviour
         foreach (var mapInfo in roots)
         {
             var node = Instantiate(mapTransitNodePrefab, rootNodeContainer);
-            node.Setup(mapInfo, () => OpenMap(mapInfo.identifier), ShowHoverName);
+            node.Setup(mapInfo, () => OpenMap(mapInfo.identifier));
             SetPositionByPercent(node.GetComponent<RectTransform>(), mapInfo.pos, rootNodeContainer);
         }
     }

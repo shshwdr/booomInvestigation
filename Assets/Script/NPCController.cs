@@ -6,14 +6,17 @@ using UnityEngine.UI;
 public class NPCController : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
 {
     [SerializeField] private Image npcImage;
+    [SerializeField] private Text nameText;
 
     private NpcInfo npcInfo;
-    private Action<string> onHoverChanged;
 
-    public void Setup(NpcInfo info, Action<string> onHoverChangedAction)
+    public void Setup(NpcInfo info)
     {
         npcInfo = info;
-        onHoverChanged = onHoverChangedAction;
+        if (nameText != null)
+        {
+            nameText.text = string.Empty;
+        }
         LoadSprite();
     }
 
@@ -36,22 +39,25 @@ public class NPCController : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
 
     public void OnPointerEnter(PointerEventData eventData)
     {
-        if (npcInfo != null)
+        if (npcInfo != null && nameText != null)
         {
-            onHoverChanged?.Invoke(npcInfo.name);
+            nameText.text = npcInfo.name;
         }
     }
 
     public void OnPointerExit(PointerEventData eventData)
     {
-        onHoverChanged?.Invoke(string.Empty);
+        if (nameText != null)
+        {
+            nameText.text = string.Empty;
+        }
     }
 
     public void OnPointerClick(PointerEventData eventData)
     {
         if (npcInfo != null)
         {
-            Debug.Log("Enter dialog with npc: " + npcInfo.identifier);
+            DialogueController.Instance.OpenNpcDialogue(npcInfo.identifier);
         }
     }
 }

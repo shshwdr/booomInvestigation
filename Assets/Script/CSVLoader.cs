@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Sinbad;
 using UnityEngine;
 
@@ -17,10 +18,30 @@ public class NpcInfo
     public List<float> pos = new List<float>();
     public string map;
 }
+
+public class TokenInfo
+{
+    public string identifier;
+    public string name;
+    public bool isStart;
+}
+
+public class DialogueInfo
+{
+    public string identifier;
+    public string text;
+    public string speaker;
+    public List<string> next = new List<string>();
+    public List<string> options = new List<string>();
+    public Dictionary<string, string> reward = new Dictionary<string, string>();
+}
 public class CSVLoader : Singleton<CSVLoader>
 {
     public Dictionary<string, MapInfo> mapInfoMap = new Dictionary<string, MapInfo>();
     public Dictionary<string, NpcInfo> npcInfoMap = new Dictionary<string, NpcInfo>();
+    public Dictionary<string, TokenInfo> tokenInfoMap = new Dictionary<string, TokenInfo>();
+    public Dictionary<string, Dictionary<string, DialogueInfo>> dialogueInfosByFile = new Dictionary<string, Dictionary<string, DialogueInfo>>();
+    public Dictionary<string, List<string>> dialogueOrderByFile = new Dictionary<string, List<string>>();
     public Dictionary<string, List<MapInfo>> childMapInfos = new Dictionary<string, List<MapInfo>>();
     public Dictionary<string, List<NpcInfo>> mapNpcInfos = new Dictionary<string, List<NpcInfo>>();
 
@@ -38,11 +59,16 @@ public class CSVLoader : Singleton<CSVLoader>
     {
         mapInfoMap.Clear();
         npcInfoMap.Clear();
+        tokenInfoMap.Clear();
+        dialogueInfosByFile.Clear();
+        dialogueOrderByFile.Clear();
         childMapInfos.Clear();
         mapNpcInfos.Clear();
 
         LoadMapInfos();
         LoadNpcInfos();
+        LoadTokenInfos();
+        LoadDialogueInfos();
         ValidateData();
         BuildLookupTables();
     }
@@ -62,6 +88,44 @@ public class CSVLoader : Singleton<CSVLoader>
         foreach (var info in infos)
         {
             npcInfoMap[info.identifier] = info;
+        }
+    }
+
+    private void LoadTokenInfos()
+    {
+        var infos = CsvUtil.LoadObjects<TokenInfo>("token");
+        foreach (var info in infos)
+        {
+            tokenInfoMap[info.identifier] = info;
+        }
+    }
+
+    private void LoadDialogueInfos()
+    {
+        var files = Resources.LoadAll<TextAsset>("csv/dialogue");
+        foreach (var file in files)
+        {
+            var fileName = file.name;
+            var infos = CsvUtil.LoadObjects<DialogueInfo>("dialogue/" + fileName);
+            var dialogueMap = new Dictionary<string, DialogueInfo>();
+            var dialogueOrder = new List<string>();
+            foreach (var info in infos)
+            {
+                if (string.IsNullOrEmpty(info.identifier))
+                {
+                    continue;
+                }
+
+                info.next = SanitizeList(info.next);
+                info.options = SanitizeList(info.options);
+                info.reward = SanitizeDictionary(info.reward);
+
+                dialogueMap[info.identifier] = info;
+                dialogueOrder.Add(info.identifier);
+            }
+
+            dialogueInfosByFile[fileName] = dialogueMap;
+            dialogueOrderByFile[fileName] = dialogueOrder;
         }
     }
 
@@ -96,6 +160,22 @@ public class CSVLoader : Singleton<CSVLoader>
             if (!mapInfoMap.ContainsKey(npcInfo.map))
             {
                 Debug.LogError("npc " + npcInfo.identifier + " map not found: " + npcInfo.map);
+            }
+        }
+
+        foreach (var fileEntry in dialogueInfosByFile)
+        {
+            var fileName = fileEntry.Key;
+            var dialogues = fileEntry.Value;
+            foreach (var dialogue in dialogues.Values)
+            {
+                foreach (var nextId in dialogue.next)
+                {
+                    if (!dialogues.ContainsKey(nextId))
+                    {
+                        Debug.LogError("dialogue " + fileName + " next not found: " + nextId);
+                    }
+                }
             }
         }
     }
@@ -155,5 +235,57 @@ public class CSVLoader : Singleton<CSVLoader>
     private static bool IsValidPos(List<float> pos)
     {
         return pos != null && pos.Count == 2;
+    }
+
+    public bool TryGetDialogueFile(string fileName, out Dictionary<string, DialogueInfo> dialogueMap)
+    {
+        return dialogueInfosByFile.TryGetValue(fileName, out dialogueMap);
+    }
+
+    public string GetFirstDialogueId(string fileName)
+    {
+        List<string> order;
+        if (dialogueOrderByFile.TryGetValue(fileName, out order))
+        {
+            return order.FirstOrDefault();
+        }
+
+        return string.Empty;
+    }
+
+    private static List<string> SanitizeList(List<string> source)
+    {
+        if (source == null)
+        {
+            return new List<string>();
+        }
+
+        var result = new List<string>();
+        foreach (var value in source)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                continue;
+            }
+
+            result.Add(value.Trim());
+        }
+
+        return result;
+    }
+
+    private static Dictionary<string, string> SanitizeDictionary(Dictionary<string, string> source)
+    {
+        if (source == null)
+        {
+            return new Dictionary<string, string>();
+        }
+
+        return source
+            .Where(pair => !string.IsNullOrWhiteSpace(pair.Key))
+            .ToDictionary(
+                pair => pair.Key.Trim(),
+                pair => pair.Value == null ? string.Empty : pair.Value.Trim()
+            );
     }
 }
