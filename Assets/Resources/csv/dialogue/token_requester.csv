@@ -3,9 +3,9 @@
 1,得到卡牌1,thought,,2|3|4,card:1,
 2,选项测试0,me,5,,,
 3,选项测试1,me,6,,,
-4,选项测试2 - 需要卡牌2才能选择,me,7,,,card_2
+4,选项测试2 - 需要卡牌2才能选择,me,7,,,card:2
 5,选项测试结果0,thought,9|8,,,
 6,选项测试结果1,thought,,,,
 7,选项测试结果2,thought,,,,
 8,普通发展，没有要求,thought,,,,
-9,有特殊token的发展 - 这个发展需要阅读卡牌2出现,thought,,,,
+9,有特殊token的发展 - 这个发展需要阅读卡牌2出现,thought,,,,token:requesterAfter

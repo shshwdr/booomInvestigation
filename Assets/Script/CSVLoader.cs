@@ -48,7 +48,7 @@ public class DialogueInfo
     public string speaker;
     public List<string> next = new List<string>();
     public List<string> options = new List<string>();
-    public Dictionary<string, string> reward = new Dictionary<string, string>();
+    public List<string> reward = new List<string>();
     public List<string> requirement = new List<string>();
 }
 public class CSVLoader : Singleton<CSVLoader>
@@ -154,7 +154,7 @@ public class CSVLoader : Singleton<CSVLoader>
 
                 info.next = SanitizeList(info.next);
                 info.options = SanitizeList(info.options);
-                info.reward = SanitizeDictionary(info.reward);
+                info.reward = SanitizeList(info.reward);
                 info.requirement = SanitizeList(info.requirement);
 
                 dialogueMap[info.identifier] = info;
@@ -221,20 +221,15 @@ public class CSVLoader : Singleton<CSVLoader>
 
                 foreach (var reward in dialogue.reward)
                 {
-                    if (reward.Key == "token" && !tokenInfoMap.ContainsKey(reward.Value))
+                    if (!IsValidDialogueTypedIdentifier(reward))
                     {
-                        Debug.LogError("dialogue " + fileName + " reward token not found: " + reward.Value);
-                    }
-
-                    if (reward.Key == "card" && !cardInfoMap.ContainsKey(reward.Value))
-                    {
-                        Debug.LogError("dialogue " + fileName + " reward card not found: " + reward.Value);
+                        Debug.LogError("dialogue " + fileName + " has invalid reward: " + reward + " at " + dialogue.identifier);
                     }
                 }
 
                 foreach (var requirement in dialogue.requirement)
                 {
-                    if (!IsValidDialogueRequirement(requirement))
+                    if (!IsValidDialogueTypedIdentifier(requirement))
                     {
                         Debug.LogError("dialogue " + fileName + " has invalid requirement: " + requirement + " at " + dialogue.identifier);
                     }
@@ -337,37 +332,11 @@ public class CSVLoader : Singleton<CSVLoader>
         return result;
     }
 
-    private static Dictionary<string, string> SanitizeDictionary(Dictionary<string, string> source)
+    private bool IsValidDialogueTypedIdentifier(string value)
     {
-        if (source == null)
-        {
-            return new Dictionary<string, string>();
-        }
-
-        return source
-            .Where(pair => !string.IsNullOrWhiteSpace(pair.Key))
-            .ToDictionary(
-                pair => pair.Key.Trim(),
-                pair => pair.Value == null ? string.Empty : pair.Value.Trim()
-            );
-    }
-
-    private bool IsValidDialogueRequirement(string requirement)
-    {
-        if (string.IsNullOrEmpty(requirement))
-        {
-            return false;
-        }
-
-        var splitIndex = requirement.IndexOf('_');
-        if (splitIndex <= 0 || splitIndex >= requirement.Length - 1)
-        {
-            return false;
-        }
-
-        var prefix = requirement.Substring(0, splitIndex);
-        var identifier = requirement.Substring(splitIndex + 1);
-        if (string.IsNullOrEmpty(identifier))
+        string prefix;
+        string identifier;
+        if (!TryParseTypedIdentifier(value, out prefix, out identifier))
         {
             return false;
         }
@@ -383,5 +352,25 @@ public class CSVLoader : Singleton<CSVLoader>
         }
 
         return false;
+    }
+
+    private static bool TryParseTypedIdentifier(string value, out string prefix, out string identifier)
+    {
+        prefix = string.Empty;
+        identifier = string.Empty;
+        if (string.IsNullOrEmpty(value))
+        {
+            return false;
+        }
+
+        var splitIndex = value.IndexOf(':');
+        if (splitIndex <= 0 || splitIndex >= value.Length - 1)
+        {
+            return false;
+        }
+
+        prefix = value.Substring(0, splitIndex).Trim();
+        identifier = value.Substring(splitIndex + 1).Trim();
+        return !string.IsNullOrEmpty(prefix) && !string.IsNullOrEmpty(identifier);
     }
 }

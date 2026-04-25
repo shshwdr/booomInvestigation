@@ -114,15 +114,14 @@ public class DialogueController : Singleton<DialogueController>, IPointerClickHa
 
         if (currentInfo.next != null && currentInfo.next.Count > 0)
         {
-            var nextId = currentInfo.next[0];
-            if (!currentDialogueMap.ContainsKey(nextId))
+            DialogueInfo nextInfo;
+            if (!TryResolveNextDialogue(currentInfo.next, out nextInfo))
             {
-                Debug.LogWarning("Next dialogue id not found: " + nextId);
                 ShowEndButton();
                 return;
             }
 
-            currentDialogueId = nextId;
+            currentDialogueId = nextInfo.identifier;
             ShowCurrentDialogue();
             return;
         }
@@ -241,19 +240,13 @@ public class DialogueController : Singleton<DialogueController>, IPointerClickHa
 
         foreach (var requirement in requirements)
         {
-            if (string.IsNullOrEmpty(requirement))
+            string prefix;
+            string identifier;
+            if (!TryParseTypedIdentifier(requirement, out prefix, out identifier))
             {
                 return false;
             }
 
-            var splitIndex = requirement.IndexOf('_');
-            if (splitIndex <= 0 || splitIndex >= requirement.Length - 1)
-            {
-                return false;
-            }
-
-            var prefix = requirement.Substring(0, splitIndex);
-            var identifier = requirement.Substring(splitIndex + 1);
             if (prefix == "card")
             {
                 if (!CardManager.Instance.HasCard(identifier))
@@ -300,13 +293,21 @@ public class DialogueController : Singleton<DialogueController>, IPointerClickHa
 
         foreach (var reward in info.reward)
         {
-            if (reward.Key == "token")
+            string prefix;
+            string identifier;
+            if (!TryParseTypedIdentifier(reward, out prefix, out identifier))
             {
-                TokenManager.Instance.AddToken(reward.Value);
+                Debug.LogWarning("Invalid reward format: " + reward);
+                continue;
             }
-            else if (reward.Key == "card")
+
+            if (prefix == "token")
             {
-                CardManager.Instance.AddCard(reward.Value);
+                TokenManager.Instance.AddToken(identifier);
+            }
+            else if (prefix == "card")
+            {
+                CardManager.Instance.AddCard(identifier);
             }
         }
     }
@@ -360,5 +361,54 @@ public class DialogueController : Singleton<DialogueController>, IPointerClickHa
     private void ClearCurrentOptionCells()
     {
         currentOptionCells.Clear();
+    }
+
+    private bool TryResolveNextDialogue(List<string> nextIds, out DialogueInfo resolvedInfo)
+    {
+        resolvedInfo = null;
+        if (nextIds == null || nextIds.Count == 0 || currentDialogueMap == null)
+        {
+            return false;
+        }
+
+        foreach (var nextId in nextIds)
+        {
+            DialogueInfo candidate;
+            if (!currentDialogueMap.TryGetValue(nextId, out candidate))
+            {
+                Debug.LogWarning("Next dialogue id not found: " + nextId);
+                continue;
+            }
+
+            if (!IsRequirementSatisfied(candidate.requirement))
+            {
+                continue;
+            }
+
+            resolvedInfo = candidate;
+            return true;
+        }
+
+        return false;
+    }
+
+    private static bool TryParseTypedIdentifier(string value, out string prefix, out string identifier)
+    {
+        prefix = string.Empty;
+        identifier = string.Empty;
+        if (string.IsNullOrEmpty(value))
+        {
+            return false;
+        }
+
+        var splitIndex = value.IndexOf(':');
+        if (splitIndex <= 0 || splitIndex >= value.Length - 1)
+        {
+            return false;
+        }
+
+        prefix = value.Substring(0, splitIndex).Trim();
+        identifier = value.Substring(splitIndex + 1).Trim();
+        return !string.IsNullOrEmpty(prefix) && !string.IsNullOrEmpty(identifier);
     }
 }
