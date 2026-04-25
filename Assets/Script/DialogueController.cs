@@ -35,6 +35,11 @@ public class DialogueController : Singleton<DialogueController>, IPointerClickHa
         OpenDialogueFile(npcIdentifier);
     }
 
+    public void OpenDialogueFileByName(string fileName)
+    {
+        OpenDialogueFile(fileName);
+    }
+
     public void OpenTokenDialogue(string tokenIdentifier)
     {
         OpenDialogueFile("token_" + tokenIdentifier);
@@ -152,6 +157,10 @@ public class DialogueController : Singleton<DialogueController>, IPointerClickHa
             if (reward.Key == "token")
             {
                 TokenManager.Instance.AddToken(reward.Value);
+            }
+            else if (reward.Key == "card")
+            {
+                CardManager.Instance.AddCard(reward.Value);
             }
         }
     }

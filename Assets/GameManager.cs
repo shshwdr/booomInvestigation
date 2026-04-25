@@ -9,6 +9,7 @@ public class GameManager : MonoBehaviour
     {
         CSVLoader.Instance.Init();
         TokenManager.Instance.Init();
+        CardManager.Instance.Init();
     }
 
     // Update is called once per frame

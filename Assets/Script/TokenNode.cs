@@ -8,9 +8,11 @@ public class TokenNode : MonoBehaviour
     [SerializeField] private Button button;
 
     private string tokenIdentifier;
+    private GameObject redDot;
 
     private void Awake()
     {
+        redDot = GeneralButtonRedDotUtil.ResolveRedDot(gameObject);
         if (button != null)
         {
             button.onClick.RemoveAllListeners();
@@ -25,6 +27,11 @@ public class TokenNode : MonoBehaviour
         {
             tmpText.text = tokenInfo == null ? string.Empty : tokenInfo.name;
         }
+
+        if (redDot != null)
+        {
+            redDot.SetActive(!string.IsNullOrEmpty(tokenIdentifier) && TokenManager.Instance.IsTokenUnread(tokenIdentifier));
+        }
     }
 
     private void OnClickToken()
@@ -32,6 +39,12 @@ public class TokenNode : MonoBehaviour
         if (string.IsNullOrEmpty(tokenIdentifier))
         {
             return;
+        }
+
+        TokenManager.Instance.MarkTokenRead(tokenIdentifier);
+        if (redDot != null)
+        {
+            redDot.SetActive(false);
         }
 
         DialogueController.Instance.OpenTokenDialogue(tokenIdentifier);

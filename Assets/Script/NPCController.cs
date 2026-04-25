@@ -60,4 +60,9 @@ public class NPCController : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
             DialogueController.Instance.OpenNpcDialogue(npcInfo.identifier);
         }
     }
+
+    public string GetIdentifier()
+    {
+        return npcInfo == null ? string.Empty : npcInfo.identifier;
+    }
 }

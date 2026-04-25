@@ -26,6 +26,21 @@ public class TokenInfo
     public bool isStart;
 }
 
+public class CardInfo
+{
+    public string identifier;
+    public string name;
+    public bool isStart;
+    public bool isKey;
+}
+
+public class CardMergeInfo
+{
+    public string card1;
+    public string card2;
+    public string result;
+}
+
 public class DialogueInfo
 {
     public string identifier;
@@ -40,6 +55,8 @@ public class CSVLoader : Singleton<CSVLoader>
     public Dictionary<string, MapInfo> mapInfoMap = new Dictionary<string, MapInfo>();
     public Dictionary<string, NpcInfo> npcInfoMap = new Dictionary<string, NpcInfo>();
     public Dictionary<string, TokenInfo> tokenInfoMap = new Dictionary<string, TokenInfo>();
+    public Dictionary<string, CardInfo> cardInfoMap = new Dictionary<string, CardInfo>();
+    public List<CardMergeInfo> cardMergeInfos = new List<CardMergeInfo>();
     public Dictionary<string, Dictionary<string, DialogueInfo>> dialogueInfosByFile = new Dictionary<string, Dictionary<string, DialogueInfo>>();
     public Dictionary<string, List<string>> dialogueOrderByFile = new Dictionary<string, List<string>>();
     public Dictionary<string, List<MapInfo>> childMapInfos = new Dictionary<string, List<MapInfo>>();
@@ -60,6 +77,8 @@ public class CSVLoader : Singleton<CSVLoader>
         mapInfoMap.Clear();
         npcInfoMap.Clear();
         tokenInfoMap.Clear();
+        cardInfoMap.Clear();
+        cardMergeInfos.Clear();
         dialogueInfosByFile.Clear();
         dialogueOrderByFile.Clear();
         childMapInfos.Clear();
@@ -68,6 +87,8 @@ public class CSVLoader : Singleton<CSVLoader>
         LoadMapInfos();
         LoadNpcInfos();
         LoadTokenInfos();
+        LoadCardInfos();
+        LoadCardMergeInfos();
         LoadDialogueInfos();
         ValidateData();
         BuildLookupTables();
@@ -98,6 +119,20 @@ public class CSVLoader : Singleton<CSVLoader>
         {
             tokenInfoMap[info.identifier] = info;
         }
+    }
+
+    private void LoadCardInfos()
+    {
+        var infos = CsvUtil.LoadObjects<CardInfo>("card");
+        foreach (var info in infos)
+        {
+            cardInfoMap[info.identifier] = info;
+        }
+    }
+
+    private void LoadCardMergeInfos()
+    {
+        cardMergeInfos = CsvUtil.LoadObjects<CardMergeInfo>("cardMerge");
     }
 
     private void LoadDialogueInfos()
@@ -153,7 +188,7 @@ public class CSVLoader : Singleton<CSVLoader>
 
             if (string.IsNullOrEmpty(npcInfo.map))
             {
-                Debug.LogError("npc " + npcInfo.identifier + " map is empty.");
+               // Debug.LogError("npc " + npcInfo.identifier + " map is empty.");
                 continue;
             }
 
@@ -174,6 +209,19 @@ public class CSVLoader : Singleton<CSVLoader>
                     if (!dialogues.ContainsKey(nextId))
                     {
                         Debug.LogError("dialogue " + fileName + " next not found: " + nextId);
+                    }
+                }
+
+                foreach (var reward in dialogue.reward)
+                {
+                    if (reward.Key == "token" && !tokenInfoMap.ContainsKey(reward.Value))
+                    {
+                        Debug.LogError("dialogue " + fileName + " reward token not found: " + reward.Value);
+                    }
+
+                    if (reward.Key == "card" && !cardInfoMap.ContainsKey(reward.Value))
+                    {
+                        Debug.LogError("dialogue " + fileName + " reward card not found: " + reward.Value);
                     }
                 }
             }
