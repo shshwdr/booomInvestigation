@@ -49,6 +49,7 @@ public class DialogueInfo
     public List<string> next = new List<string>();
     public List<string> options = new List<string>();
     public Dictionary<string, string> reward = new Dictionary<string, string>();
+    public List<string> requirement = new List<string>();
 }
 public class CSVLoader : Singleton<CSVLoader>
 {
@@ -154,6 +155,7 @@ public class CSVLoader : Singleton<CSVLoader>
                 info.next = SanitizeList(info.next);
                 info.options = SanitizeList(info.options);
                 info.reward = SanitizeDictionary(info.reward);
+                info.requirement = SanitizeList(info.requirement);
 
                 dialogueMap[info.identifier] = info;
                 dialogueOrder.Add(info.identifier);
@@ -204,6 +206,11 @@ public class CSVLoader : Singleton<CSVLoader>
             var dialogues = fileEntry.Value;
             foreach (var dialogue in dialogues.Values)
             {
+                if (dialogue.next.Count > 0 && dialogue.options.Count > 0)
+                {
+                    Debug.LogError("dialogue " + fileName + " has both next and options: " + dialogue.identifier);
+                }
+
                 foreach (var nextId in dialogue.next)
                 {
                     if (!dialogues.ContainsKey(nextId))
@@ -222,6 +229,14 @@ public class CSVLoader : Singleton<CSVLoader>
                     if (reward.Key == "card" && !cardInfoMap.ContainsKey(reward.Value))
                     {
                         Debug.LogError("dialogue " + fileName + " reward card not found: " + reward.Value);
+                    }
+                }
+
+                foreach (var requirement in dialogue.requirement)
+                {
+                    if (!IsValidDialogueRequirement(requirement))
+                    {
+                        Debug.LogError("dialogue " + fileName + " has invalid requirement: " + requirement + " at " + dialogue.identifier);
                     }
                 }
             }
@@ -335,5 +350,38 @@ public class CSVLoader : Singleton<CSVLoader>
                 pair => pair.Key.Trim(),
                 pair => pair.Value == null ? string.Empty : pair.Value.Trim()
             );
+    }
+
+    private bool IsValidDialogueRequirement(string requirement)
+    {
+        if (string.IsNullOrEmpty(requirement))
+        {
+            return false;
+        }
+
+        var splitIndex = requirement.IndexOf('_');
+        if (splitIndex <= 0 || splitIndex >= requirement.Length - 1)
+        {
+            return false;
+        }
+
+        var prefix = requirement.Substring(0, splitIndex);
+        var identifier = requirement.Substring(splitIndex + 1);
+        if (string.IsNullOrEmpty(identifier))
+        {
+            return false;
+        }
+
+        if (prefix == "card")
+        {
+            return cardInfoMap.ContainsKey(identifier);
+        }
+
+        if (prefix == "token")
+        {
+            return tokenInfoMap.ContainsKey(identifier);
+        }
+
+        return false;
     }
 }

@@ -514,7 +514,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &272177275
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1851,6 +1851,7 @@ MonoBehaviour:
   dialogueRoot: {fileID: 1627181266}
   dialogueScrollRect: {fileID: 214855231}
   dialogueCellPrefab: {fileID: 5490308013965821426, guid: f1f973ae62290ad4abbd48b1f1f85117, type: 3}
+  dialogueOptionCellPrefab: {fileID: 3865912883477145029, guid: 22c8dadb7ed44ae4798e09f979216dcf, type: 3}
   endDialogueButton: {fileID: 1272719167}
 --- !u!1 &1688328023
 GameObject:

@@ -1,6 +1,6 @@
 ﻿identifier,text,speaker,next,options,reward,requirement
 0,得到卡牌0,thought,1,,card:0,
-1,得到卡牌1,thought,,2|3,card:1,
+1,得到卡牌1,thought,,2|3|4,card:1,
 2,选项测试0,me,5,,,
 3,选项测试1,me,6,,,
 4,选项测试2 - 需要卡牌2才能选择,me,7,,,card_2
