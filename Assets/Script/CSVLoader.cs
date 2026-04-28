@@ -62,6 +62,7 @@ public class CSVLoader : Singleton<CSVLoader>
     public Dictionary<string, List<string>> dialogueOrderByFile = new Dictionary<string, List<string>>();
     public Dictionary<string, List<MapInfo>> childMapInfos = new Dictionary<string, List<MapInfo>>();
     public Dictionary<string, List<NpcInfo>> mapNpcInfos = new Dictionary<string, List<NpcInfo>>();
+    private bool isInitialized;
 
     private void Start()
     {
@@ -70,7 +71,13 @@ public class CSVLoader : Singleton<CSVLoader>
 
     public void Init()
     {
+        if (isInitialized)
+        {
+            return;
+        }
+
         LoadAllCsv();
+        isInitialized = true;
     }
 
     private void LoadAllCsv()
@@ -168,6 +175,20 @@ public class CSVLoader : Singleton<CSVLoader>
 
     private void ValidateData()
     {
+        foreach (var tokenInfo in tokenInfoMap.Values)
+        {
+            if (tokenInfo == null || string.IsNullOrEmpty(tokenInfo.identifier))
+            {
+                continue;
+            }
+
+            var tokenDialogueFile = "token_" + tokenInfo.identifier;
+            if (!dialogueInfosByFile.ContainsKey(tokenDialogueFile))
+            {
+                Debug.LogError("token " + tokenInfo.identifier + " dialogue csv not found: " + tokenDialogueFile);
+            }
+        }
+
         foreach (var mapInfo in mapInfoMap.Values)
         {
             if (!IsValidPos(mapInfo.pos))
@@ -197,6 +218,22 @@ public class CSVLoader : Singleton<CSVLoader>
             if (!mapInfoMap.ContainsKey(npcInfo.map))
             {
                 Debug.LogError("npc " + npcInfo.identifier + " map not found: " + npcInfo.map);
+            }
+
+            if (string.IsNullOrEmpty(npcInfo.identifier))
+            {
+                continue;
+            }
+
+            if (!dialogueInfosByFile.ContainsKey(npcInfo.identifier))
+            {
+                Debug.LogError("npc " + npcInfo.identifier + " dialogue csv not found: " + npcInfo.identifier);
+            }
+
+            var npcDefaultDialogueFile = npcInfo.identifier + "_default";
+            if (!dialogueInfosByFile.ContainsKey(npcDefaultDialogueFile))
+            {
+                Debug.LogError("npc " + npcInfo.identifier + " default dialogue csv not found: " + npcDefaultDialogueFile);
             }
         }
 
@@ -233,6 +270,22 @@ public class CSVLoader : Singleton<CSVLoader>
                     {
                         Debug.LogError("dialogue " + fileName + " has invalid requirement: " + requirement + " at " + dialogue.identifier);
                     }
+                }
+
+                if (string.IsNullOrEmpty(dialogue.speaker))
+                {
+                    Debug.LogError("dialogue " + fileName + " speaker is empty at " + dialogue.identifier);
+                }
+                else if (dialogue.speaker == "this")
+                {
+                    if (fileName.StartsWith("token_"))
+                    {
+                        Debug.LogError("dialogue " + fileName + " speaker cannot be this at " + dialogue.identifier);
+                    }
+                }
+                else if (!npcInfoMap.ContainsKey(dialogue.speaker))
+                {
+                    Debug.LogError("dialogue " + fileName + " speaker not found in npc: " + dialogue.speaker + " at " + dialogue.identifier);
                 }
             }
         }
