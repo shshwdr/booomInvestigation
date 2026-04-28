@@ -32,6 +32,27 @@ public class CardNode : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDrag
         redDot = GeneralButtonRedDotUtil.ResolveRedDot(gameObject);
     }
 
+    private void OnEnable()
+    {
+        if (!CardManager.hasInitialized())
+        {
+            return;
+        }
+
+        CardManager.Instance.OnCardUnreadStateChanged += RefreshRedDot;
+        RefreshRedDot();
+    }
+
+    private void OnDisable()
+    {
+        if (!CardManager.hasInitialized())
+        {
+            return;
+        }
+
+        CardManager.Instance.OnCardUnreadStateChanged -= RefreshRedDot;
+    }
+
     public void Setup(CardInfo cardInfo, CardNodeContext cardContext)
     {
         cardIdentifier = cardInfo == null ? string.Empty : cardInfo.identifier;
@@ -42,10 +63,7 @@ public class CardNode : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDrag
             tmpText.text = cardInfo == null ? string.Empty : cardInfo.name;
         }
 
-        if (redDot != null)
-        {
-            redDot.SetActive(!string.IsNullOrEmpty(cardIdentifier) && CardManager.Instance.IsCardUnread(cardIdentifier));
-        }
+        RefreshRedDot();
     }
 
     public void OnPointerClick(PointerEventData eventData)
@@ -130,10 +148,17 @@ public class CardNode : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDrag
         }
 
         CardManager.Instance.MarkCardRead(cardIdentifier);
-        if (redDot != null)
+        RefreshRedDot();
+    }
+
+    private void RefreshRedDot()
+    {
+        if (redDot == null || !CardManager.hasInitialized())
         {
-            redDot.SetActive(false);
+            return;
         }
+
+        redDot.SetActive(!string.IsNullOrEmpty(cardIdentifier) && CardManager.Instance.IsCardUnread(cardIdentifier));
     }
 
     private void ShowCardDetail()
