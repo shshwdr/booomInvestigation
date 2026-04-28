@@ -58,6 +58,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5854008854218137}
     m_Modifications:
+    - target: {fileID: 481201944658093019, guid: 6e01986973700fd47934f1f4da0c8b81, type: 3}
+      propertyPath: m_enableWordWrapping
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 842130384018363818, guid: 6e01986973700fd47934f1f4da0c8b81, type: 3}
       propertyPath: m_Name
       value: Text (TMP)

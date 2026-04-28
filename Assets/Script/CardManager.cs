@@ -118,6 +118,17 @@ public class CardManager : Singleton<CardManager>
         return result;
     }
 
+    public bool TryGetCardInfo(string identifier, out CardInfo cardInfo)
+    {
+        cardInfo = null;
+        if (string.IsNullOrEmpty(identifier))
+        {
+            return false;
+        }
+
+        return CSVLoader.Instance.cardInfoMap.TryGetValue(identifier, out cardInfo);
+    }
+
     public bool TryMergeCards(string cardA, string cardB, out string resultCardId)
     {
         resultCardId = string.Empty;

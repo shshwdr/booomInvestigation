@@ -30,6 +30,7 @@ public class CardInfo
 {
     public string identifier;
     public string name;
+    public string desc;
     public bool isStart;
     public bool isKey;
 }

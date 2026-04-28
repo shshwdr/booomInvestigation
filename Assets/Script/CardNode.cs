@@ -51,6 +51,11 @@ public class CardNode : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDrag
     public void OnPointerClick(PointerEventData eventData)
     {
         MarkAsRead();
+
+        if (eventData != null && eventData.button == PointerEventData.InputButton.Right)
+        {
+            ShowCardDetail();
+        }
     }
 
     public void OnBeginDrag(PointerEventData eventData)
@@ -129,6 +134,22 @@ public class CardNode : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDrag
         {
             redDot.SetActive(false);
         }
+    }
+
+    private void ShowCardDetail()
+    {
+        if (!CardDetailPanel.hasInitialized())
+        {
+            return;
+        }
+
+        CardInfo cardInfo;
+        if (!CardManager.Instance.TryGetCardInfo(cardIdentifier, out cardInfo))
+        {
+            return;
+        }
+
+        CardDetailPanel.Instance.Show(cardInfo);
     }
 
     private void ReturnToOriginalParent()
